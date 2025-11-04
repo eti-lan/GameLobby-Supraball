@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: file: http: https:; img-src 'self' data: file: http: https:; connect-src 'self' http: https: ws: wss:;">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Supraball - Lobby</title>
+  <link rel="stylesheet" href="styles/scrollbar.css">
+  <link rel="stylesheet" href="styles/notifications.css">
+  <link rel="stylesheet" href="styles/lobby-view.css">
+  <script src="i18n.js"></script>
+  <script src="scripts/config.js"></script>
+  <script src="scripts/notifications.js"></script>
+</head>
+<body>
+<div id="notification-container"></div>
+<div class="header">
+    <h1 id="lobbyNameHeader" data-i18n="view.title">Lobby</h1>
+  </div>
+
+  <div class="container">
+    <div id="errorMessage"></div>
+
+    <div id="statusMessage" class="status-message" style="display: none;"></div>
+
+    <div class="lobby-info" id="lobbyInfoPanel">
+      <button class="settings-toggle-btn" id="settingsToggleBtn" title="Einstellungen" data-title-i18n="view.settings">⚙️</button>
+      
+      <div class="lobby-info-header">
+        <div class="map-preview">
+          <img id="mapPreviewImg" src="" alt="Map" style="display: none;">
+          <div id="mapPreviewFallback" class="map-preview-fallback">🗺️</div>
+        </div>
+        
+        <div class="lobby-info-main">
+          <div class="lobby-info-grid">
+            <div class="info-item">
+              <div class="info-label" data-i18n="view.info.map">Karte</div>
+              <div class="info-value" id="lobbyMap">-</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label" data-i18n="view.info.mode">Spielmodus</div>
+              <div class="info-value" id="lobbyMode">-</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label" data-i18n="view.info.players">Spieler</div>
+              <div class="info-value" id="lobbyPlayers">0/6</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label" data-i18n="view.info.status">Status</div>
+              <div class="info-value" id="lobbyStatus" data-i18n="view.status.waiting">Warten</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="lobby-details" id="lobbyDetails">
+        <form id="editLobbyForm">
+          <!-- Map Selection -->
+          <div class="form-section">
+            <div class="section-title" data-i18n="creator.map.title">🗺️ Map auswählen</div>
+            <div class="maps-grid" id="editMapsContainer">
+              <!-- Maps will be loaded dynamically -->
+            </div>
+          </div>
+
+          <!-- Lobby Type & Game Mode -->
+          <div class="form-section">
+            <div class="two-column">
+              <div>
+                <div class="section-title" data-i18n="creator.type.title">⚽ Lobby Typ</div>
+                <div class="radio-group">
+                  <label>
+                    <input type="radio" name="editLobbyType" value="3v3" checked> <span data-i18n="creator.type.3v3">🎯 3v3</span>
+                  </label>
+                  <label>
+                    <input type="radio" name="editLobbyType" value="5v5"> <span data-i18n="creator.type.5v5">🏆 5v5</span>
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <div class="section-title" data-i18n="creator.mode.title">🎮 Spielmodus</div>
+                <div class="radio-group">
+                  <label>
+                    <input type="radio" id="editModeTime" name="editGameMode" value="time" checked> <span data-i18n="creator.mode.time">⏱️ Zeit</span>
+                  </label>
+                  <label>
+                    <input type="radio" id="editModeGoal" name="editGameMode" value="goal"> <span data-i18n="creator.mode.goal">🎯 Tore</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Time/Goal & Bot & Warmup Settings -->
+          <div class="form-section">
+            <div class="three-column">
+              <!-- Column 1: Zeit/Tore -->
+              <div>
+                <div id="editTimeLimitGroup">
+                  <div class="section-title" data-i18n="creator.time.title">⏱️ Zeit-Limit</div>
+                  <div class="input-group">
+                    <label for="editTimeLimit" data-i18n="creator.time.minutes">Minuten:</label>
+                    <input type="number" id="editTimeLimit" value="10" min="1" max="30">
+                  </div>
+                </div>
+
+                <div id="editGoalScoreGroup" style="display: none;">
+                  <div class="section-title" data-i18n="creator.goal.title">🎯 Tor-Limit</div>
+                  <div class="input-group">
+                    <label for="editGoalScore" data-i18n="creator.goal.goals">Tore:</label>
+                    <input type="number" id="editGoalScore" value="5" min="1" max="20">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Column 2: Bots -->
+              <div>
+                <div class="section-title" data-i18n="creator.bots.title">🤖 Bots</div>
+                <div class="checkbox-group">
+                  <input type="checkbox" id="editBotsActive">
+                  <label for="editBotsActive" data-i18n="creator.bots.enable">Auto-Fill aktivieren</label>
+                </div>
+                <p style="font-size: 11px; color: rgba(255,255,255,0.6); margin: 8px 0 0 34px;" data-i18n="creator.bots.description">
+                  Füllt automatisch auf 6 (3v3) oder 10 (5v5) Spieler auf
+                </p>
+                <div id="editBotSkillGroup" style="display: none; margin-top: 15px;">
+                  <label for="editBotSkill">Bot Skill Level:</label>
+                  <input type="range" id="editBotSkill" min="500" max="2000" value="1250" step="50">
+                  <div class="slider-value" id="editBotSkillValue">1250</div>
+                </div>
+              </div>
+
+              <!-- Column 3: Aufwärmzeit -->
+              <div>
+                <div class="section-title" data-i18n="creator.warmup.title">⏲️ Aufwärmzeit</div>
+                <div class="input-group">
+                  <label for="editWarmupTime" data-i18n="creator.warmup.minutes">Minuten:</label>
+                  <input type="number" id="editWarmupTime" value="2" min="2" max="10">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Save Button -->
+          <div class="button-group">
+            <button type="button" id="cancelEditBtn" class="btn btn-secondary" data-i18n="view.cancel.edit">Abbrechen</button>
+            <button type="submit" id="saveSettingsBtn" class="btn btn-primary" data-i18n="view.save">💾 Einstellungen speichern</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="teams-section">
+      <div class="teams-grid">
+        <!-- Red Team (Left Column) -->
+        <div class="team-container">
+          <div class="team-header red">
+            <span class="team-title" data-i18n="view.team.red">🔴 Rotes Team</span>
+            <button id="switchToRed" class="team-join-btn red" data-i18n="view.team.join">Beitreten</button>
+          </div>
+          <div id="redTeamList" class="team-players"></div>
+        </div>
+
+        <!-- Blue Team (Right Column) -->
+        <div class="team-container">
+          <div class="team-header blue">
+            <span class="team-title" data-i18n="view.team.blue">🔵 Blaues Team</span>
+            <button id="switchToBlue" class="team-join-btn blue" data-i18n="view.team.join">Beitreten</button>
+          </div>
+          <div id="blueTeamList" class="team-players"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ready Control and Controls in one row -->
+    <div class="ready-control">
+      <label class="ready-toggle" id="readyToggle">
+        <input type="checkbox" id="readyCheckbox">
+        <span class="ready-label" data-i18n="view.ready">✓ Bereit</span>
+      </label>
+      
+      <button id="startBtn" class="start-btn" style="display: none;" data-i18n="view.start">🚀 Match starten</button>
+      <button id="leaveBtn" class="leave-btn" data-i18n="view.leave">Lobby verlassen</button>
+    </div>
+  </div>
+
+  <script src="scripts/lobby-view.js"></script>
+</body>
+</html>
+

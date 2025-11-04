@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: file: http: https:; img-src 'self' data: file: http: https:; connect-src 'self' http: https: ws: wss:;">
+  <title>Supraball - Neue Lobby erstellen</title>
+  <link rel="stylesheet" href="styles/scrollbar.css">
+  <link rel="stylesheet" href="styles/notifications.css">
+  <link rel="stylesheet" href="styles/lobby-creator.css">
+  <script src="i18n.js"></script>
+  <script src="scripts/config.js"></script>
+  <script src="scripts/notifications.js"></script>
+</head>
+<body>
+  <div id="notification-container"></div>
+  <div class="header">
+    <h1 data-i18n="creator.title">➕ Neue Lobby erstellen</h1>
+  </div>
+
+  <div class="container">
+    <div class="creator-panel">
+      <form id="createLobbyForm">
+        <!-- Map Selection -->
+        <div class="form-section">
+          <div class="section-title" data-i18n="creator.map.title">🗺️ Map auswählen</div>
+          <div class="maps-grid" id="mapsContainer">
+            <!-- Maps will be loaded dynamically -->
+          </div>
+        </div>
+
+        <!-- Lobby Type & Game Mode -->
+        <div class="form-section">
+          <div class="two-column">
+            <div>
+              <div class="section-title" data-i18n="creator.type.title">⚽ Lobby Typ</div>
+              <div class="radio-group">
+                <label>
+                  <input type="radio" name="lobbyType" value="3v3" checked> <span data-i18n="creator.type.3v3">🎯 3v3</span>
+                </label>
+                <label>
+                  <input type="radio" name="lobbyType" value="5v5"> <span data-i18n="creator.type.5v5">🏆 5v5</span>
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <div class="section-title" data-i18n="creator.mode.title">🎮 Spielmodus</div>
+              <div class="radio-group">
+                <label>
+                  <input type="radio" id="modeTime" name="gameMode" value="time" checked> <span data-i18n="creator.mode.time">⏱️ Zeit</span>
+                </label>
+                <label>
+                  <input type="radio" id="modeGoal" name="gameMode" value="goal"> <span data-i18n="creator.mode.goal">🎯 Tore</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Time/Goal & Bot & Warmup Settings -->
+        <div class="form-section">
+          <div class="three-column">
+            <!-- Column 1: Zeit/Tore -->
+            <div>
+              <div id="timeLimitGroup">
+                <div class="section-title" data-i18n="creator.time.title">⏱️ Zeit-Limit</div>
+                <div class="input-group">
+                  <label for="timeLimit" data-i18n="creator.time.minutes">Minuten:</label>
+                  <input type="number" id="timeLimit" value="10" min="1" max="30">
+                </div>
+              </div>
+
+              <div id="goalScoreGroup" style="display: none;">
+                <div class="section-title" data-i18n="creator.goal.title">🎯 Tor-Limit</div>
+                <div class="input-group">
+                  <label for="goalScore" data-i18n="creator.goal.goals">Tore:</label>
+                  <input type="number" id="goalScore" value="5" min="1" max="20">
+                </div>
+              </div>
+            </div>
+            
+            <!-- Column 2: Bots -->
+            <div>
+              <div class="section-title" data-i18n="creator.bots.title">🤖 Bots</div>
+              <div class="checkbox-group">
+                <input type="checkbox" id="botsActive">
+                <label for="botsActive" data-i18n="creator.bots.enable">Auto-Fill aktivieren</label>
+              </div>
+              <p style="font-size: 11px; color: rgba(255,255,255,0.6); margin: 8px 0 0 34px;" data-i18n="creator.bots.description">
+                Füllt automatisch auf 6 (3v3) oder 10 (5v5) Spieler auf
+              </p>
+            </div>
+            
+            <!-- Column 3: Aufwärmzeit -->
+            <div>
+              <div class="section-title" data-i18n="creator.warmup.title">⏱️ Aufwärmzeit</div>
+              <div class="input-group">
+                <label for="warmupTime" data-i18n="creator.warmup.minutes">Minuten:</label>
+                <input type="number" id="warmupTime" value="2" min="2" max="10">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="button-group">
+          <button type="button" class="btn btn-secondary" id="cancelButton" data-i18n="creator.cancel">❌ Abbrechen</button>
+          <button type="submit" class="btn btn-primary" id="createButton" data-i18n="creator.create">✅ Lobby erstellen</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="scripts/lobby-creator.js"></script>
+</body>
+</html>

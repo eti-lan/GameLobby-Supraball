@@ -1,0 +1,65 @@
+# Unreal Engine directories
+Binaries/
+Engine/
+Server/
+UDKGame/
+
+# Build and generated files
+_dist/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Master server
+master-server/node_modules/
+
+# Client dependencies
+client/node_modules/
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# IDE files
+.vs/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Temporary files
+*.tmp
+*.temp
+*.cache
+
+# Config files with sensitive data (if any)
+*.local
+.env
+.env.local
+.env.*.local
+
+# Unreal Engine specific
+*.uasset
+*.umap
+Saved/
+DerivedDataCache/
+Intermediate/
+/Eliot.UELib.Decompiler
+*.exe

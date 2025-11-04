@@ -1,0 +1,419 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #0a1929 0%, #1a2980 50%, #26d0ce 100%);
+    color: white;
+    min-height: 100vh;
+    padding: 0;
+    margin: 0;
+}
+
+/* Header styling copied exactly from lobby-browser */
+.header {
+    background: rgba(10, 25, 41, 0.8);
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    padding: 10px clamp(10px, 2vw, 20px);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6),
+                inset 0 1px 1px rgba(38, 208, 206, 0.2),
+                0 0 60px rgba(38, 208, 206, 0.15);
+    border-bottom: 1px solid rgba(38, 208, 206, 0.3);
+    flex-wrap: nowrap;
+    gap: 12px;
+    position: relative;
+    z-index: 10;
+}
+
+.header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, 
+      transparent 0%, 
+      rgba(38, 208, 206, 0.8) 50%, 
+      transparent 100%);
+    animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+}
+
+.header h1 {
+    margin: 0;
+    font-size: clamp(1.2rem, 2.5vw, 1.5rem);
+    background: linear-gradient(135deg, #26d0ce 0%, #1a2980 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 20px rgba(38, 208, 206, 0.6));
+    flex-shrink: 0;
+    white-space: nowrap;
+    animation: textGlow 3s ease-in-out infinite;
+}
+
+@keyframes textGlow {
+    0%, 100% { 
+        filter: drop-shadow(0 0 20px rgba(38, 208, 206, 0.6));
+    }
+    50% { 
+        filter: drop-shadow(0 0 30px rgba(38, 208, 206, 0.9));
+    }
+}
+
+/* Container */
+/* Button styles copied exactly from lobby-browser */
+.btn {
+    padding: clamp(6px, 1vw, 8px) clamp(14px, 2.5vw, 18px);
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: clamp(12px, 1.8vw, 13px);
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3),
+                inset 0 1px 1px rgba(255,255,255,0.2);
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+      transparent, 
+      rgba(255,255,255,0.3), 
+      transparent);
+    transition: left 0.5s;
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, rgba(10, 25, 41, 0.7) 0%, rgba(26, 41, 128, 0.7) 100%);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    color: rgba(38, 208, 206, 0.95);
+    border-color: rgba(38, 208, 206, 0.4);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4),
+                inset 0 1px 1px rgba(38, 208, 206, 0.15);
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(135deg, rgba(10, 25, 41, 0.8) 0%, rgba(26, 41, 128, 0.8) 100%);
+    transform: translateY(-3px);
+    border-color: rgba(38, 208, 206, 0.7);
+    box-shadow: 0 8px 25px rgba(38, 208, 206, 0.4),
+                0 0 30px rgba(38, 208, 206, 0.2),
+                inset 0 1px 1px rgba(38, 208, 206, 0.25);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+
+/* Screen Management */
+.screen {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.screen.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Mode Selection */
+.mode-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+    margin-top: 40px;
+}
+
+.mode-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(38, 208, 206, 0.3);
+    border-radius: 20px;
+    padding: 40px;
+    text-align: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.mode-card:hover {
+    transform: translateY(-10px);
+    border-color: rgba(38, 208, 206, 0.6);
+    box-shadow: 0 12px 48px rgba(38, 208, 206, 0.2);
+}
+
+.mode-icon {
+    font-size: 4em;
+    font-weight: bold;
+    background: linear-gradient(135deg, #26d0ce, #1a2980);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 20px;
+}
+
+.mode-card h2 {
+    font-size: 2em;
+    margin-bottom: 15px;
+    color: #26d0ce;
+}
+
+.mode-card p {
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 20px;
+    font-size: 1.1em;
+}
+
+.queue-info {
+    background: rgba(38, 208, 206, 0.1);
+    border: 1px solid rgba(38, 208, 206, 0.3);
+    border-radius: 10px;
+    padding: 15px;
+    margin: 20px 0;
+}
+
+.queue-count {
+    font-size: 2em;
+    font-weight: bold;
+    color: #26d0ce;
+}
+
+/* Buttons in mode cards and screens */
+.mode-card .btn-primary,
+.screen .btn-primary,
+.screen .btn-secondary {
+    padding: 15px 40px;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.2em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.mode-card .btn-primary,
+.screen .btn-primary {
+    background: linear-gradient(135deg, #26d0ce, #1a2980);
+    color: white;
+    box-shadow: 0 4px 15px rgba(38, 208, 206, 0.4);
+}
+
+.mode-card .btn-primary:hover,
+.screen .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(38, 208, 206, 0.6);
+}
+
+.screen .btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.screen .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Searching Screen */
+.searching-animation {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.spinner {
+    width: 120px;
+    height: 120px;
+    border: 8px solid rgba(38, 208, 206, 0.2);
+    border-top-color: #26d0ce;
+    border-radius: 50%;
+    margin: 0 auto 40px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.searching-animation h2 {
+    font-size: 2.5em;
+    margin-bottom: 20px;
+}
+
+.mode-text, .queue-text, .wait-time {
+    font-size: 1.3em;
+    margin: 15px 0;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+#searching-queue-size, #searching-required {
+    font-weight: bold;
+    color: #26d0ce;
+    font-size: 1.5em;
+}
+
+/* Match Found Screen */
+.match-found-animation {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.checkmark {
+    width: 120px;
+    height: 120px;
+    background: linear-gradient(135deg, #26d0ce, #1a2980);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4em;
+    margin: 0 auto 30px;
+    animation: scaleIn 0.5s ease;
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0);
+    }
+    to {
+        transform: scale(1);
+    }
+}
+
+.match-found-animation h2 {
+    font-size: 2.5em;
+    margin-bottom: 20px;
+    color: #26d0ce;
+}
+
+.team-preview {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin: 40px 0;
+}
+
+.team {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    padding: 25px;
+}
+
+.team.red {
+    border: 2px solid rgba(255, 100, 100, 0.5);
+}
+
+.team.blue {
+    border: 2px solid rgba(100, 150, 255, 0.5);
+}
+
+.team h3 {
+    font-size: 1.8em;
+    margin-bottom: 20px;
+}
+
+.team.red h3 {
+    color: #ff6464;
+}
+
+.team.blue h3 {
+    color: #6496ff;
+}
+
+#red-team-players, #blue-team-players {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.player-item {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 1.1em;
+}
+
+.connecting-status {
+    font-size: 1.3em;
+    color: #26d0ce;
+    margin-top: 30px;
+    padding: 20px;
+    background: rgba(38, 208, 206, 0.1);
+    border-radius: 10px;
+    animation: pulse 2s ease infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 0.7;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+/* Error Screen */
+.error-content {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.error-content h2 {
+    font-size: 3em;
+    margin-bottom: 20px;
+}
+
+#error-message {
+    font-size: 1.3em;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 40px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .mode-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .team-preview {
+        grid-template-columns: 1fr;
+    }
+    
+    .header h1 {
+        font-size: 1.8em;
+    }
+}

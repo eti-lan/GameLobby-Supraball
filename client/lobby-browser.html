@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: file: http: https:; img-src 'self' data: file: http: https:; connect-src 'self' http: https: ws: wss:;">
+  <title>Supraball - Lobby Browser</title>
+  <link rel="stylesheet" href="styles/scrollbar.css">
+  <link rel="stylesheet" href="styles/notifications.css">
+  <link rel="stylesheet" href="styles/settings-popup.css">
+  <link rel="stylesheet" href="styles/lobby-browser.css">
+  <script src="i18n.js"></script>
+  <script src="scripts/config.js"></script>
+  <script src="scripts/notifications.js"></script>
+</head>
+<body>
+  <div id="notification-container"></div>
+  <div class="header">
+    <h1 data-i18n="lobby.browser.title">🎮 Supraball</h1>
+    <div style="display: flex; gap: 12px; align-items: center; justify-content: space-between; flex: 1; flex-wrap: nowrap;">
+      <div class="status-indicator" style="border-color: #ffc107; color: #ffc107; background: rgba(255, 193, 7, 0.2); flex-shrink: 0;">
+        <div class="status-dot" style="background: #ffc107; animation: none;"></div>
+        <span id="connectionStatus" data-i18n="lobby.browser.connecting">Verbindung wird hergestellt...</span>
+      </div>
+      <div class="header-buttons" style="display: flex; gap: 8px; align-items: center; flex-shrink: 0;">
+        <button class="btn btn-secondary" id="refreshBtn" title="Aktualisieren">🔄</button>
+        <button class="btn btn-primary" id="quickMatchBtn" style="background: linear-gradient(135deg, #26d0ce, #1a2980);">🎯 Quick Match</button>
+        <button class="btn btn-primary" id="createLobbyBtn" data-i18n="lobby.browser.create">➕ Neue Lobby</button>
+        <button class="btn btn-secondary" id="settingsBtn" title="Einstellungen" style="width: 40px; padding: 8px;">⚙️</button>
+        <div class="language-selector">
+          <select class="language-dropdown" id="languageSelect">
+            <option value="de">DE</option>
+            <option value="en">EN</option>
+            <option value="fr">FR</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="container">
+    <div class="lobby-table">
+      <table id="lobbyTable">
+        <thead>
+          <tr>
+            <th data-i18n="table.map">Map</th>
+            <th data-i18n="table.lobbyname">Lobby Name</th>
+            <th data-i18n="table.players">Spieler</th>
+            <th data-i18n="table.mode">Modus</th>
+            <th data-i18n="table.status">Status</th>
+            <th data-i18n="table.ping">Ping</th>
+          </tr>
+        </thead>
+        <tbody id="lobbyTableBody">
+          <!-- Wird dynamisch gefüllt -->
+        </tbody>
+      </table>
+      <div id="emptyState" class="empty-state" style="display: none;">
+        <h2 data-i18n="lobby.browser.empty.title">🏆 Keine Lobbies verfügbar</h2>
+        <p data-i18n="lobby.browser.empty.subtitle">Erstelle die erste Lobby und starte ein Match!</p>
+        <button class="btn btn-primary" onclick="document.getElementById('createLobbyBtn').click()" style="margin-top: 20px;" data-i18n="lobby.browser.empty.button">
+          ➕ Erste Lobby erstellen
+        </button>
+      </div>
+    </div>
+    
+    <!-- Offline Training Button unter der Lobby-Liste -->
+    <div class="offline-training-section">
+      <button class="btn btn-offline" id="offlineTrainingBtn" data-i18n="lobby.browser.offline">🎯 Offline Training</button>
+      <button class="btn btn-offline" id="classicVersionBtn" style="margin-left: 12px;">🎮 Supraball Classic</button>
+    </div>
+  </div>
+
+  <!-- Settings Popup -->
+  <div class="settings-overlay" id="settingsOverlay">
+    <div class="settings-popup">
+      <div class="settings-header">
+        <div class="settings-title">⚙️ Einstellungen</div>
+        <button class="settings-close" id="settingsCloseBtn">×</button>
+      </div>
+      
+      <form class="settings-form" id="settingsForm">
+        <div class="setting-group">
+          <label class="setting-label">
+            🌐 Master-Server URL
+          </label>
+          <input 
+            type="text" 
+            class="setting-input" 
+            id="masterServerInput" 
+            placeholder="http://supraball.servers.lan:8991"
+            value=""
+          />
+          <div class="setting-hint">
+            Standard: http://supraball.servers.lan:8991
+          </div>
+        </div>
+
+        <div class="settings-actions">
+          <button type="button" class="settings-btn settings-btn-reset" id="resetBtn">
+            <span>🔄 Zurücksetzen</span>
+          </button>
+          <button type="submit" class="settings-btn settings-btn-primary">
+            <span>💾 Speichern</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <script src="scripts/lobby-main.js"></script>
+  <script>
+    // Language selector functionality
+    const languageSelect = document.getElementById('languageSelect');
+    
+    // Set current language on load
+    const currentLang = getCurrentLanguage();
+    languageSelect.value = currentLang;
+    
+    // Handle language change
+    languageSelect.addEventListener('change', (e) => {
+      const lang = e.target.value;
+      setLanguage(lang);
+      config.setLanguage(lang);
+    });
+
+    // Settings popup functionality
+    const settingsBtn = document.getElementById('settingsBtn');
+    const settingsOverlay = document.getElementById('settingsOverlay');
+    const settingsCloseBtn = document.getElementById('settingsCloseBtn');
+    const settingsForm = document.getElementById('settingsForm');
+    const resetBtn = document.getElementById('resetBtn');
+    const masterServerInput = document.getElementById('masterServerInput');
+
+    // Load current settings
+    masterServerInput.value = config.getMasterServerUrl();
+
+    // Open settings
+    settingsBtn.addEventListener('click', () => {
+      settingsOverlay.classList.add('active');
+      masterServerInput.value = config.getMasterServerUrl();
+    });
+
+    // Close settings
+    settingsCloseBtn.addEventListener('click', () => {
+      settingsOverlay.classList.remove('active');
+    });
+
+    // Close on overlay click
+    settingsOverlay.addEventListener('click', (e) => {
+      if (e.target === settingsOverlay) {
+        settingsOverlay.classList.remove('active');
+      }
+    });
+
+    // Save settings
+    settingsForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const newUrl = masterServerInput.value.trim();
+      
+      if (!newUrl) {
+        showError('Bitte gib eine Master-Server URL ein');
+        return;
+      }
+
+      config.setMasterServerUrl(newUrl);
+      window.MASTER_SERVER_URL = newUrl;
+      
+      showSuccess('Einstellungen gespeichert! Seite wird neu geladen...');
+      
+      setTimeout(() => {
+        location.reload();
+      }, 1500);
+    });
+
+    // Reset to defaults
+    resetBtn.addEventListener('click', () => {
+      if (confirm('Möchtest du wirklich alle Einstellungen zurücksetzen?')) {
+        config.reset();
+        masterServerInput.value = config.getMasterServerUrl();
+        showInfo('Einstellungen zurückgesetzt');
+      }
+    });
+
+    // Close on ESC key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && settingsOverlay.classList.contains('active')) {
+        settingsOverlay.classList.remove('active');
+      }
+    });
+  </script>
+</body>
+</html>

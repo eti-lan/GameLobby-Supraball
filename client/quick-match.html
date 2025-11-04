@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: file: http: https:; img-src 'self' data: file: http: https:; connect-src 'self' http: https: ws: wss:;">
+    <title>Quick Match - Supraball</title>
+    <link rel="stylesheet" href="styles/scrollbar.css">
+    <link rel="stylesheet" href="styles/notifications.css">
+    <link rel="stylesheet" href="styles/quick-match.css">
+    <script src="i18n.js"></script>
+    <script src="scripts/config.js"></script>
+    <script src="scripts/notifications.js"></script>
+</head>
+<body>
+    <div id="notification-container"></div>
+    <div class="header">
+        <h1 data-i18n="quick.title">🎯 Quick Match</h1>
+        <div style="display: flex; gap: 12px; align-items: center; justify-content: space-between; flex: 1; flex-wrap: nowrap;">
+            <div style="flex: 1;"></div>
+            <div class="header-buttons" style="display: flex; gap: 8px; align-items: center; flex-shrink: 0;">
+                <button class="btn btn-secondary" onclick="location.href='lobby-browser.html'" data-i18n="quick.back">
+                    ← Zurück
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Mode Selection Screen -->
+        <div id="mode-selection" class="screen active">
+            <div class="mode-cards">
+                <div class="mode-card" data-mode="3v3">
+                    <div class="mode-icon">3v3</div>
+                    <h2 data-i18n="quick.3v3.title">Quick 3v3</h2>
+                    <p data-i18n="quick.3v3.description">Fast-paced 3 vs 3 matches</p>
+                    <div class="queue-info">
+                        <span class="queue-count" id="queue-3v3">0</span> <span data-i18n="quick.queue.players">players in queue</span>
+                    </div>
+                    <button class="btn-primary" onclick="startQuickMatch('3v3')" data-i18n="quick.3v3.button">
+                        Play 3v3
+                    </button>
+                </div>
+
+                <div class="mode-card" data-mode="5v5">
+                    <div class="mode-icon">5v5</div>
+                    <h2 data-i18n="quick.5v5.title">Quick 5v5</h2>
+                    <p data-i18n="quick.5v5.description">Standard 5 vs 5 matches</p>
+                    <div class="queue-info">
+                        <span class="queue-count" id="queue-5v5">0</span> <span data-i18n="quick.queue.players">players in queue</span>
+                    </div>
+                    <button class="btn-primary" onclick="startQuickMatch('5v5')" data-i18n="quick.5v5.button">
+                        Play 5v5
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Searching Screen -->
+        <div id="searching-screen" class="screen">
+            <div class="searching-animation">
+                <div class="spinner"></div>
+                <h2 data-i18n="quick.searching.title">🔍 Searching for Match</h2>
+                <p class="mode-text"><span data-i18n="quick.searching.mode">Mode:</span> <span id="current-mode">3v3</span></p>
+                <p class="queue-text">
+                    <span id="searching-queue-size">0</span> / <span id="searching-required">6</span> <span data-i18n="quick.queue.players">players</span>
+                </p>
+                <p class="wait-time"><span data-i18n="quick.searching.wait">Waiting:</span> <span id="wait-time">0</span>s</p>
+            </div>
+            <button class="btn-secondary" onclick="cancelSearch()" data-i18n="quick.searching.cancel">
+                Cancel Search
+            </button>
+        </div>
+
+        <!-- Match Found Screen -->
+        <div id="match-found-screen" class="screen">
+            <div class="match-found-animation">
+                <div class="checkmark">✓</div>
+                <h2 data-i18n="quick.found.title">🎮 Match Found!</h2>
+                <p data-i18n="quick.found.starting">Starting server...</p>
+                <div class="team-preview">
+                    <div class="team red">
+                        <h3 data-i18n="quick.found.red">Red Team</h3>
+                        <div id="red-team-players"></div>
+                    </div>
+                    <div class="team blue">
+                        <h3 data-i18n="quick.found.blue">Blue Team</h3>
+                        <div id="blue-team-players"></div>
+                    </div>
+                </div>
+                <div class="connecting-status" id="connecting-status" data-i18n="quick.found.preparing">
+                    Preparing server...
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Screen -->
+        <div id="error-screen" class="screen">
+            <div class="error-content">
+                <h2 data-i18n="quick.error.title">❌ Error</h2>
+                <p id="error-message" data-i18n="quick.error.message">Something went wrong</p>
+                <button class="btn-primary" onclick="backToModeSelection()" data-i18n="quick.error.retry">
+                    Try Again
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="UDKNetIDGenerator.js"></script>
+    <script src="scripts/quick-match.js"></script>
+</body>
+</html>

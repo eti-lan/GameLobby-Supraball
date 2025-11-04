@@ -1,0 +1,51 @@
+{
+  "name": "supraball-client",
+  "version": "2025.10.23",
+  "description": "Launcher for Supraball",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --dir",
+    "build:dist": "electron-builder --dir --config.directories.output=../_dist && node post-build.js"
+  },
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8",
+    "fs-extra": "^11.3.2"
+  },
+  "build": {
+    "asar": false,
+    "appId": "com.eti.gamelauncher.supraball",
+    "win": {
+      "target": [
+        {
+          "target": "dir",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "icon.ico"
+    },
+    "files": [
+      "main.js",
+      "UDKNetIDGenerator.js",
+      "config.js",
+      "i18n.js",
+      "lobby-browser.html",
+      "lobby-creator.html",
+      "lobby-view.html",
+      "quick-match.html",
+      "scripts/**/*",
+      "styles/**/*",
+      "icon.ico",
+      "node_modules/**/*"
+    ],
+    "directories": {
+      "buildResources": "assets",
+      "output": "../_dist"
+    },
+    "nsis": false,
+    "npmRebuild": false
+  }
+}
