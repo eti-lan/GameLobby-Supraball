@@ -38,6 +38,7 @@
       "quick-match.html",
       "scripts/**/*",
       "styles/**/*",
+      "sounds/**/*",
       "icon.ico",
       "node_modules/**/*"
     ],

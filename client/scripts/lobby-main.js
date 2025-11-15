@@ -79,6 +79,15 @@ ipcRenderer.on('netid-response', (event, data) => {
   // Decode username in case it's URL-encoded
   currentUsername = decodeURIComponent(data.username);
   console.log(`✅ NetID: ${currentNetID} (${currentUsername})`);
+  
+  // Store in localStorage for chat
+  localStorage.setItem('supraball-netid', currentNetID);
+  localStorage.setItem('supraball-username', currentUsername);
+  
+  // Dispatch custom event to notify chat that credentials are ready
+  window.dispatchEvent(new CustomEvent('supraball-credentials-ready', {
+    detail: { netid: currentNetID, username: currentUsername }
+  }));
 });
 
 // ========================================
@@ -106,7 +115,7 @@ function setupEventListeners() {
   // Offline Training Button
   document.getElementById('offlineTrainingBtn').addEventListener('click', () => {
     console.log('🎯 Starting Offline Training...');
-    ipcRenderer.send('start-offline-training');
+    ipcRenderer.send('start-offline-training', config.getWindowedMode());
   });
   
   // Classic Version Button

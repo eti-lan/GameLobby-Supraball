@@ -63,3 +63,5 @@ DerivedDataCache/
 Intermediate/
 /Eliot.UELib.Decompiler
 *.exe
+
+_docs/Eliot.UELib.Decompiler.zip

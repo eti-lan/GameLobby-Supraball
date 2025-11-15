@@ -241,6 +241,9 @@ class LobbyManager {
       return { success: false, error: "Lobby not found" };
     }
     
+    // Check if leaving player is the creator
+    const isCreator = (lobby.createdBy === netid);
+    
     // Remove player from Red Team
     let removed = false;
     let username = null;
@@ -269,11 +272,17 @@ class LobbyManager {
     
     console.log(`✅ ${username} left ${lobby.name}`);
     
-    // Delete lobby if empty
+    // Delete lobby if creator leaves OR if lobby is empty
+    if (isCreator) {
+      console.log(`👑 Creator left lobby - deleting ${lobby.name}`);
+      this.deleteLobby(lobbyId);
+      return { success: true, lobbyDeleted: true, reason: 'creator_left' };
+    }
+    
     const totalPlayers = lobby.players.red.length + lobby.players.blue.length;
     if (totalPlayers === 0) {
       this.deleteLobby(lobbyId);
-      return { success: true, lobbyDeleted: true };
+      return { success: true, lobbyDeleted: true, reason: 'empty' };
     }
     
     return { success: true, lobby };
@@ -372,6 +381,16 @@ class LobbyManager {
       return null;
     }
     return this.getLobbyInfo(lobby);
+  }
+  
+  // ✅ Update activity timestamp (keep-alive)
+  updateActivity(lobbyId) {
+    const lobby = this.lobbies.get(lobbyId);
+    if (lobby) {
+      lobby.lastActivity = Date.now();
+      return true;
+    }
+    return false;
   }
   
   // ✅ Find lobby by Query Port (for /prepare endpoint)

@@ -45,7 +45,7 @@ const translations = {
     'creator.create': '✅ Lobby erstellen',
     
     // Lobby View
-    'view.title': 'Lobby',
+    'view.title': '🏆 Lobby',
     'view.back': '← Zurück zur Lobby-Liste',
     'view.settings': 'Einstellungen',
     'view.info.map': 'Karte',
@@ -117,7 +117,36 @@ const translations = {
     'quick.found.preparing': 'Bereite Server vor...',
     'quick.error.title': '❌ Fehler',
     'quick.error.message': 'Etwas ist schiefgelaufen',
-    'quick.error.retry': 'Erneut versuchen'
+    'quick.error.retry': 'Erneut versuchen',
+    
+    // Join Match Overlay
+    'join.overlay.title.ready': 'Match bereit!',
+    'join.overlay.title.running': 'Match läuft!',
+    'join.overlay.text.host-started': 'Der Host hat das Match gestartet. Klicke um beizutreten.',
+    'join.overlay.text.already-running': 'Das Match hat bereits begonnen. Möchtest du beitreten?',
+    'join.overlay.text.server-ready': 'Der Server ist bereit zum Spielen.',
+    'join.overlay.button': 'Spiel beitreten',
+    'join.overlay.cancel': 'Abbrechen',
+    
+    // Chat
+    'chat.title': '💬 Chat',
+    'chat.placeholder': 'Nachricht eingeben...',
+    'chat.send': 'Senden',
+    'chat.empty': 'Noch keine Nachrichten',
+    
+    // Settings
+    'settings.title': '⚙️ Einstellungen',
+    'settings.masterserver.label': '🌐 Master-Server URL',
+    'settings.masterserver.placeholder': 'http://supraball.servers.lan:8991',
+    'settings.masterserver.hint': 'Standard: http://supraball.servers.lan:8991',
+    'settings.windowed.label': '🖥️ Spiel im Fenstermodus starten',
+    'settings.windowed.hint': 'Startet das Spiel im Fenster statt im Vollbildmodus',
+    'settings.reset': '🔄 Zurücksetzen',
+    'settings.save': '💾 Speichern',
+    'settings.reset.confirm': 'Möchtest du wirklich alle Einstellungen zurücksetzen?',
+    'settings.reset.success': 'Einstellungen zurückgesetzt',
+    'settings.save.success': 'Einstellungen gespeichert! Seite wird neu geladen...',
+    'settings.masterserver.required': 'Bitte gib eine Master-Server URL ein'
   },
   
   en: {
@@ -163,7 +192,7 @@ const translations = {
     'creator.create': '✅ Create Lobby',
     
     // Lobby View
-    'view.title': 'Lobby',
+    'view.title': '🏆 Lobby',
     'view.back': '← Back to Lobby List',
     'view.settings': 'Settings',
     'view.info.map': 'Map',
@@ -235,7 +264,36 @@ const translations = {
     'quick.found.preparing': 'Preparing server...',
     'quick.error.title': '❌ Error',
     'quick.error.message': 'Something went wrong',
-    'quick.error.retry': 'Try Again'
+    'quick.error.retry': 'Try Again',
+    
+    // Join Match Overlay
+    'join.overlay.title.ready': 'Match Ready!',
+    'join.overlay.title.running': 'Match Running!',
+    'join.overlay.text.host-started': 'The host has started the match. Click to join.',
+    'join.overlay.text.already-running': 'The match has already started. Do you want to join?',
+    'join.overlay.text.server-ready': 'The server is ready to play.',
+    'join.overlay.button': 'Join Game',
+    'join.overlay.cancel': 'Cancel',
+    
+    // Chat
+    'chat.title': '💬 Chat',
+    'chat.placeholder': 'Type a message...',
+    'chat.send': 'Send',
+    'chat.empty': 'No messages yet',
+    
+    // Settings
+    'settings.title': '⚙️ Settings',
+    'settings.masterserver.label': '🌐 Master Server URL',
+    'settings.masterserver.placeholder': 'http://supraball.servers.lan:8991',
+    'settings.masterserver.hint': 'Default: http://supraball.servers.lan:8991',
+    'settings.windowed.label': '🖥️ Start game in windowed mode',
+    'settings.windowed.hint': 'Starts the game in a window instead of fullscreen',
+    'settings.reset': '🔄 Reset',
+    'settings.save': '💾 Save',
+    'settings.reset.confirm': 'Do you really want to reset all settings?',
+    'settings.reset.success': 'Settings reset',
+    'settings.save.success': 'Settings saved! Page will reload...',
+    'settings.masterserver.required': 'Please enter a Master Server URL'
   },
   
   fr: {
@@ -281,7 +339,7 @@ const translations = {
     'creator.create': '✅ Créer le lobby',
     
     // Lobby View
-    'view.title': 'Lobby',
+    'view.title': '🏆 Lobby',
     'view.back': '← Retour à la liste des lobbies',
     'view.settings': 'Paramètres',
     'view.info.map': 'Carte',
@@ -353,7 +411,36 @@ const translations = {
     'quick.found.preparing': 'Préparation du serveur...',
     'quick.error.title': '❌ Erreur',
     'quick.error.message': 'Quelque chose s\'est mal passé',
-    'quick.error.retry': 'Réessayer'
+    'quick.error.retry': 'Réessayer',
+    
+    // Join Match Overlay
+    'join.overlay.title.ready': 'Match prêt!',
+    'join.overlay.title.running': 'Match en cours!',
+    'join.overlay.text.host-started': 'L\'hôte a démarré le match. Cliquez pour rejoindre.',
+    'join.overlay.text.already-running': 'Le match a déjà commencé. Voulez-vous rejoindre?',
+    'join.overlay.text.server-ready': 'Le serveur est prêt à jouer.',
+    'join.overlay.button': 'Rejoindre le jeu',
+    'join.overlay.cancel': 'Annuler',
+    
+    // Chat
+    'chat.title': '💬 Chat',
+    'chat.placeholder': 'Tapez un message...',
+    'chat.send': 'Envoyer',
+    'chat.empty': 'Aucun message',
+    
+    // Settings
+    'settings.title': '⚙️ Paramètres',
+    'settings.masterserver.label': '🌐 URL du serveur maître',
+    'settings.masterserver.placeholder': 'http://supraball.servers.lan:8991',
+    'settings.masterserver.hint': 'Par défaut: http://supraball.servers.lan:8991',
+    'settings.windowed.label': '🖥️ Démarrer le jeu en mode fenêtré',
+    'settings.windowed.hint': 'Lance le jeu dans une fenêtre au lieu du plein écran',
+    'settings.reset': '🔄 Réinitialiser',
+    'settings.save': '💾 Enregistrer',
+    'settings.reset.confirm': 'Voulez-vous vraiment réinitialiser tous les paramètres?',
+    'settings.reset.success': 'Paramètres réinitialisés',
+    'settings.save.success': 'Paramètres enregistrés! La page va se recharger...',
+    'settings.masterserver.required': 'Veuillez saisir une URL de serveur maître'
   }
 };
 
@@ -412,6 +499,13 @@ function updateTranslations() {
     } else {
       element.textContent = translation;
     }
+  });
+  
+  // Handle placeholder translations separately
+  document.querySelectorAll('[data-placeholder-i18n]').forEach(element => {
+    const key = element.getAttribute('data-placeholder-i18n');
+    const translation = t(key);
+    element.placeholder = translation;
   });
 }
 

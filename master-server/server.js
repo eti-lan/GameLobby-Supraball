@@ -34,15 +34,23 @@ class SupraballMasterServer {
     // Set callback for stopping servers when lobby is deleted
     this.lobbyManager.setStopServerCallback((lobbyId) => {
       this.serverManager.stopServer(lobbyId);
+      // Clean up lobby chat
+      this.lobbyChatMessages.delete(lobbyId);
     });
     
     // 🎯 Quick Match System
     this.quickMatchQueue = new Map(); // netid -> player data
     this.quickMatchCheckInterval = null;
     
+    // 💬 Chat System
+    this.globalChatMessages = [];
+    this.lobbyChatMessages = new Map(); // lobbyId -> messages array
+    this.maxChatMessages = 100; // Maximum messages to keep per chat
+    
     console.log(`🌐 LAN-IP: ${this.lanIP}`);
     console.log(`🎮 Lobby System initialized`);
     console.log(`🎯 Quick Match System initialized`);
+    console.log(`💬 Chat System initialized`);
     if (this.debugMode) {
       console.log('🐛 Debug mode enabled');
     }
@@ -450,6 +458,9 @@ class SupraballMasterServer {
         return res.status(404).json({ success: false, error: 'Lobby not found' });
       }
       
+      // Update lastActivity to keep lobby alive (heartbeat)
+      this.lobbyManager.updateActivity(req.params.id);
+      
       // Only log if lobby state changed
       const redPlayers = lobby.redTeam.map(p => p.username).join(',');
       const bluePlayers = lobby.blueTeam.map(p => p.username).join(',');
@@ -811,6 +822,106 @@ class SupraballMasterServer {
     
     // ========================================
     // END QUICK MATCH SYSTEM API
+    // ========================================
+    
+    // ========================================
+    // CHAT SYSTEM API
+    // ========================================
+    
+    // Get global chat messages
+    this.httpApp.get('/chat/global', (req, res) => {
+      res.json({
+        success: true,
+        messages: this.globalChatMessages
+      });
+    });
+    
+    // Post global chat message
+    this.httpApp.post('/chat/global', (req, res) => {
+      const { netid, username, message } = req.body;
+      
+      if (!netid || !message) {
+        return res.status(400).json({ success: false, error: 'netid and message required' });
+      }
+      
+      // Use provided username or fallback
+      const playerName = username || this.getPlayerName(netid) || `Player_${netid.substring(netid.length - 6)}`;
+      
+      const chatMessage = {
+        netid,
+        playerName,
+        message: message.substring(0, 500), // Limit message length
+        timestamp: new Date().toISOString()
+      };
+      
+      this.globalChatMessages.push(chatMessage);
+      
+      // Keep only last N messages
+      if (this.globalChatMessages.length > this.maxChatMessages) {
+        this.globalChatMessages = this.globalChatMessages.slice(-this.maxChatMessages);
+      }
+      
+      console.log(`💬 Global Chat [${playerName}]: ${message}`);
+      
+      res.json({ success: true });
+    });
+    
+    // Get lobby chat messages
+    this.httpApp.get('/chat/lobby/:id', (req, res) => {
+      const lobbyId = req.params.id;
+      const messages = this.lobbyChatMessages.get(lobbyId) || [];
+      
+      res.json({
+        success: true,
+        messages
+      });
+    });
+    
+    // Post lobby chat message
+    this.httpApp.post('/chat/lobby/:id', (req, res) => {
+      const lobbyId = req.params.id;
+      const { netid, username, message } = req.body;
+      
+      if (!netid || !message) {
+        return res.status(400).json({ success: false, error: 'netid and message required' });
+      }
+      
+      // Check if lobby exists
+      const lobby = this.lobbyManager.getLobby(lobbyId);
+      if (!lobby) {
+        return res.status(404).json({ success: false, error: 'Lobby not found' });
+      }
+      
+      // Use provided username or fallback
+      const playerName = username || this.getPlayerName(netid) || `Player_${netid.substring(netid.length - 6)}`;
+      
+      const chatMessage = {
+        netid,
+        playerName,
+        message: message.substring(0, 500), // Limit message length
+        timestamp: new Date().toISOString()
+      };
+      
+      // Get or create lobby chat
+      if (!this.lobbyChatMessages.has(lobbyId)) {
+        this.lobbyChatMessages.set(lobbyId, []);
+      }
+      
+      const lobbyMessages = this.lobbyChatMessages.get(lobbyId);
+      lobbyMessages.push(chatMessage);
+      
+      // Keep only last N messages
+      if (lobbyMessages.length > this.maxChatMessages) {
+        this.lobbyChatMessages.set(lobbyId, lobbyMessages.slice(-this.maxChatMessages));
+      }
+      
+      console.log(`💬 Lobby ${lobbyId} [${playerName}]: ${message}`);
+      
+      res.json({ success: true });
+    });
+    
+    // ========================================
+    // END CHAT SYSTEM API
     // ========================================
 
     // Catch-all for any other endpoint
@@ -1206,6 +1317,36 @@ class SupraballMasterServer {
       }
     }
     return count;
+  }
+  
+  getPlayerName(netid) {
+    // Try to get player name from lobby system
+    const lobbies = this.lobbyManager.getAllLobbies();
+    for (const lobby of lobbies) {
+      const player = lobby.players.find(p => p.netid === netid);
+      if (player) {
+        return player.name;
+      }
+    }
+    
+    // Try to get from quick match queue
+    const queuePlayer = this.quickMatchQueue.get(netid);
+    if (queuePlayer) {
+      return queuePlayer.playerName;
+    }
+    
+    // Try to get from registered servers (old system)
+    for (const server of this.servers.values()) {
+      if (server.players) {
+        for (const player of server.players) {
+          if (player.netid === netid || player.uniqueid === netid) {
+            return player.name;
+          }
+        }
+      }
+    }
+    
+    return null; // Not found
   }
   
   checkQuickMatches() {

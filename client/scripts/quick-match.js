@@ -20,37 +20,18 @@ document.addEventListener('DOMContentLoaded', () => {
     startQueueStatsPolling();
 });
 
-// Load player data from config
+// Load player data from main process (same as lobby-view.js)
 function loadPlayerData() {
-    const configPath = path.join(__dirname, '..', 'UDKGame', 'Config');
-    
-    try {
-        // Try to load from UDKGame config
-        const netIdPath = path.join(configPath, 'netid.txt');
-        const usernamePath = path.join(configPath, 'username.txt');
-        
-        if (fs.existsSync(netIdPath)) {
-            myNetId = fs.readFileSync(netIdPath, 'utf-8').trim();
-        } else {
-            myNetId = generateNetID();
-            fs.mkdirSync(configPath, { recursive: true });
-            fs.writeFileSync(netIdPath, myNetId);
-        }
-        
-        if (fs.existsSync(usernamePath)) {
-            myUsername = fs.readFileSync(usernamePath, 'utf-8').trim();
-        } else {
-            myUsername = `Player_${myNetId.substring(myNetId.length - 6)}`;
-            fs.writeFileSync(usernamePath, myUsername);
-        }
-        
-        console.log(`Player loaded: ${myUsername} (${myNetId})`);
-    } catch (error) {
-        console.error('Error loading player data:', error);
-        myNetId = generateNetID();
-        myUsername = `Player_${myNetId.substring(myNetId.length - 6)}`;
-    }
+    // Get NetID from main process
+    ipcRenderer.send('get-netid');
 }
+
+// Receive NetID from main process
+ipcRenderer.on('netid-response', (event, data) => {
+    myNetId = data.netid;
+    myUsername = decodeURIComponent(data.username || `Player_${myNetId.substring(myNetId.length - 6)}`);
+    console.log(`✅ Player loaded: ${myUsername} (${myNetId})`);
+});
 
 // Start Quick Match
 async function startQuickMatch(mode) {
@@ -173,6 +154,7 @@ async function showMatchFoundScreen(lobbyId) {
     // Poll lobby status until server is ready
     let attempts = 0;
     const maxAttempts = 60; // 60 seconds timeout
+    let currentLobby = null;
     
     const checkLobby = setInterval(async () => {
         attempts++;
@@ -183,21 +165,17 @@ async function showMatchFoundScreen(lobbyId) {
             
             if (data.success && data.lobby) {
                 const lobby = data.lobby;
+                currentLobby = lobby;
                 
                 // Update team display
                 updateTeamDisplay(lobby);
                 
-                // Check if server is ready
+                // Check if server is ready - show join overlay instead of auto-connect
                 if (lobby.status === 'ready' && lobby.server) {
                     clearInterval(checkLobby);
                     
-                    document.getElementById('connecting-status').textContent = 
-                        '✅ Server Ready! Connecting...';
-                    
-                    // Connect to game server
-                    setTimeout(() => {
-                        connectToServer(lobby.server.ip, lobby.server.port);
-                    }, 1000);
+                    console.log('🎮 Server ready - showing join overlay');
+                    showJoinMatchOverlay(lobby);
                 } else if (lobby.status === 'starting') {
                     document.getElementById('connecting-status').textContent = 
                         '🔄 Starting server...';
@@ -215,6 +193,43 @@ async function showMatchFoundScreen(lobbyId) {
             showError('Server start timeout');
         }
     }, 1000);
+}
+
+// ========================================
+// JOIN MATCH OVERLAY
+// ========================================
+
+function showJoinMatchOverlay(lobby) {
+    const overlay = document.getElementById('joinMatchOverlay');
+    const title = document.getElementById('joinMatchTitle');
+    const text = document.getElementById('joinMatchText');
+    const joinBtn = document.getElementById('joinMatchBtn');
+    
+    if (!overlay) {
+        console.error('Join overlay not found!');
+        // Fallback to direct connection
+        connectToServer(lobby.server.ip, lobby.server.port);
+        return;
+    }
+    
+    // Use i18n for text
+    title.textContent = t('join.overlay.title.ready');
+    text.textContent = t('join.overlay.text.server-ready');
+    
+    // Store lobby data for join button
+    joinBtn.onclick = () => {
+        hideJoinMatchOverlay();
+        connectToServer(lobby.server.ip, lobby.server.port);
+    };
+    
+    overlay.style.display = 'flex';
+}
+
+function hideJoinMatchOverlay() {
+    const overlay = document.getElementById('joinMatchOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
 }
 
 // Update team display
@@ -250,18 +265,20 @@ function updateTeamDisplay(lobby) {
 
 // Connect to game server
 function connectToServer(ip, port) {
-    console.log(`Connecting to game server: ${ip}:${port}`);
+    console.log(`🎮 Connecting to game server: ${ip}:${port}`);
     
-    const launchUrl = `supraball://connect/${ip}:${port}`;
-    ipcRenderer.send('launch-game', { 
-        url: launchUrl,
-        netid: myNetId 
+    // Use same IPC method as lobby-view
+    ipcRenderer.send('connect-lobby-match', {
+        ip: ip,
+        port: port
+    }, config.getWindowedMode());
+    
+    // Listen for game close event
+    ipcRenderer.once('game-closed', (event, closeData) => {
+        console.log('🎮 Game closed from Quick Match');
+        // Go back to mode selection
+        backToModeSelection();
     });
-    
-    // Close window after launching
-    setTimeout(() => {
-        window.close();
-    }, 2000);
 }
 
 // UI Navigation

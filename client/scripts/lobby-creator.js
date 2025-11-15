@@ -11,6 +11,16 @@ let selectedMap = "DB-Pitch";
 let currentNetID = null;
 let currentUsername = null;
 
+// Sound effects - same as lobby-view
+const sounds = {
+  playerJoin: new Audio('sounds/player_join.mp3'),
+  startMatch: new Audio('sounds/start_match.mp3')
+};
+
+// Preload sounds
+sounds.playerJoin.load();
+sounds.startMatch.load();
+
 // 🚫 NO-CACHE fetch helper to prevent Electron caching issues
 function fetchNoCache(url, options = {}) {
   const noCacheOptions = {
@@ -241,6 +251,15 @@ async function handleSubmit(e) {
     if (data.success) {
       console.log('✅ Lobby created:', data.lobby);
       showSuccess('Lobby erfolgreich erstellt!');
+      
+      // Play lobby created sound
+      console.log('🔊 Playing lobby created sound');
+      try {
+        sounds.playerJoin.currentTime = 0;
+        sounds.playerJoin.play().catch(err => console.warn('Sound play failed:', err));
+      } catch (error) {
+        console.warn('Error playing sound:', error);
+      }
       
       // Set lobby ID and open lobby view
       ipcRenderer.send('set-lobby-id', data.lobby.id);

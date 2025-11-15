@@ -1,32 +1,32 @@
 @echo off
-echo Supraball Master Server Emulator wird gestartet...
+echo Starting Supraball Master Server Emulator...
 echo ============================================
 
-REM Prüfen ob Node.js installiert ist
+REM Check if Node.js is installed
 node --version >nul 2>&1
 if errorlevel 1 (
-    echo FEHLER: Node.js ist nicht installiert!
-    echo Bitte installieren Sie Node.js von: https://nodejs.org/
+    echo ERROR: Node.js is not installed!
+    echo Please install Node.js from: https://nodejs.org/
     pause
     exit /b 1
 )
 
-REM Ins richtige Verzeichnis wechseln
+REM Change to correct directory
 cd /d "%~dp0"
 
-REM Abhängigkeiten installieren falls nicht vorhanden
+REM Install dependencies if not present
 if not exist "node_modules" (
-    echo Installiere Abhängigkeiten...
+    echo Installing dependencies...
     npm install
 )
 
-REM Master Server starten
+REM Start Master Server
 echo.
-echo Master Server wird gestartet...
+echo Starting Master Server...
 echo Web Interface: http://localhost/
 echo TCP/UDP Server: Port 28900
 echo.
-echo Drücken Sie Strg+C zum Beenden
+echo Press Ctrl+C to stop
 echo.
 
 node server.js

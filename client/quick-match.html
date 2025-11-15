@@ -14,6 +14,20 @@
 </head>
 <body>
     <div id="notification-container"></div>
+    
+    <!-- Join Match Overlay (same as lobby-view) -->
+    <div id="joinMatchOverlay" class="join-match-overlay" style="display: none;">
+        <div class="join-match-content">
+            <div class="join-match-icon">🎮</div>
+            <h2 id="joinMatchTitle" class="join-match-title" data-i18n="join.overlay.title.ready">Match bereit!</h2>
+            <p id="joinMatchText" class="join-match-text" data-i18n="join.overlay.text.server-ready">Der Server ist bereit zum Spielen.</p>
+            <button id="joinMatchBtn" class="join-match-btn">
+                <span class="join-match-btn-icon">▶</span>
+                <span class="join-match-btn-text" data-i18n="join.overlay.button">Spiel beitreten</span>
+            </button>
+        </div>
+    </div>
+    
     <div class="header">
         <h1 data-i18n="quick.title">🎯 Quick Match</h1>
         <div style="display: flex; gap: 12px; align-items: center; justify-content: space-between; flex: 1; flex-wrap: nowrap;">

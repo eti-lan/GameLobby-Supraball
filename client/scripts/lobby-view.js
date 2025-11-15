@@ -15,6 +15,49 @@ let isCreator = false;
 let netidReceived = false;
 let lobbyIdReceived = false;
 let isGameRunning = false; // Track if game is currently running
+let lastTeamSwitchTime = 0; // Track last team switch time
+const TEAM_SWITCH_COOLDOWN = 5000; // 5 seconds cooldown
+let previousPlayerCount = 0; // Track player count for join sound
+let previousLobbyStatus = 'waiting'; // Track lobby status for start sound
+let joinOverlayCancelled = false; // Track if user cancelled join overlay
+
+// Sound effects - use relative paths like CSS files do
+const sounds = {
+  playerJoin: new Audio('sounds/player_join.mp3'),
+  startMatch: new Audio('sounds/start_match.mp3'),
+  playerSwitch: new Audio('sounds/player_switch.mp3')
+};
+
+// Set volume levels
+sounds.playerJoin.volume = 1.0;  // Full volume
+sounds.startMatch.volume = 1.0;  // Full volume
+sounds.playerSwitch.volume = 0.5; // 50% volume (quieter)
+
+// Preload sounds
+sounds.playerJoin.load();
+sounds.startMatch.load();
+sounds.playerSwitch.load();
+
+console.log('🔊 Sound URLs:', {
+  playerJoin: sounds.playerJoin.src,
+  startMatch: sounds.startMatch.src,
+  playerSwitch: sounds.playerSwitch.src
+});
+
+function playSound(sound) {
+  try {
+    console.log('🔊 Attempting to play sound:', sound.src);
+    sound.currentTime = 0; // Reset to beginning
+    const playPromise = sound.play();
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => console.log('🔊 Sound played successfully'))
+        .catch(err => console.warn('🔊 Sound play failed:', err));
+    }
+  } catch (error) {
+    console.warn('🔊 Error playing sound:', error);
+  }
+}
 
 // 🚫 NO-CACHE fetch helper to prevent Electron caching issues
 function fetchNoCache(url, options = {}) {
@@ -41,6 +84,9 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Setup event listeners
   setupEventListeners();
+  
+  // Setup join match overlay event listeners
+  setupJoinMatchOverlay();
 });
 
 // Get NetID
@@ -50,6 +96,15 @@ ipcRenderer.on('netid-response', (event, data) => {
   currentUsername = decodeURIComponent(data.username || `Player_${currentNetID.substring(currentNetID.length - 6)}`);
   netidReceived = true;
   console.log(`✅ NetID received: ${currentNetID}`);
+  
+  // Store in localStorage for chat
+  localStorage.setItem('supraball-netid', currentNetID);
+  localStorage.setItem('supraball-username', currentUsername);
+  
+  // Dispatch custom event to notify chat that credentials are ready
+  window.dispatchEvent(new CustomEvent('supraball-credentials-ready', {
+    detail: { netid: currentNetID, username: currentUsername }
+  }));
   
   // Try to start if both netid and lobbyId are ready
   tryStartRefreshing();
@@ -64,6 +119,11 @@ ipcRenderer.on('current-lobby-response', (event, lobbyId) => {
   if (!currentLobbyId) {
     showError('No lobby ID provided');
     return;
+  }
+  
+  // Switch chat to lobby mode
+  if (typeof switchChatMode !== 'undefined') {
+    switchChatMode('lobby', currentLobbyId);
   }
   
   // Try to start if both netid and lobbyId are ready
@@ -158,7 +218,7 @@ function setupEventListeners() {
       const mapsContainer = document.getElementById('editMapsContainer');
       if (mapsContainer && mapsContainer.children.length === 0) {
         console.log('📍 Loading maps for edit form...');
-        ipcRenderer.send('get-base-path-for-edit');
+        ipcRenderer.send('get-base-path');
       }
     }
   });
@@ -259,6 +319,23 @@ function renderLobby(lobby) {
   const maxPlayers = lobby.type === '3v3' ? 6 : 10;
   document.getElementById('lobbyPlayers').textContent = `${totalPlayers}/${maxPlayers}`;
   
+  // Play player join sound when player count increases
+  console.log('🔊 Player count check:', { totalPlayers, previousPlayerCount });
+  if (totalPlayers > previousPlayerCount && previousPlayerCount > 0) {
+    console.log('🔊 Playing player join sound');
+    playSound(sounds.playerJoin);
+  }
+  previousPlayerCount = totalPlayers;
+  
+  // Play match start sound when status changes to starting/ready/in-progress
+  console.log('🔊 Status check:', { current: lobby.status, previous: previousLobbyStatus });
+  if ((lobby.status === 'starting' || lobby.status === 'ready' || lobby.status === 'in-progress') && 
+      previousLobbyStatus === 'waiting') {
+    console.log('🔊 Playing match start sound');
+    playSound(sounds.startMatch);
+  }
+  previousLobbyStatus = lobby.status;
+  
   // Status auf Deutsch
   const statusMap = {
     'waiting': t('view.lobby.status.waiting'),
@@ -289,10 +366,13 @@ function renderLobby(lobby) {
   // Show status messages
   updateStatusMessage(lobby);
   
-  // Auto-join if match is starting/ready and we're not the creator
-  if (!isCreator && !isGameRunning && (lobby.status === 'starting' || lobby.status === 'ready' || lobby.status === 'in-progress')) {
-    console.log('🎮 Match started by host - auto-joining...');
-    autoJoinMatch(lobby);
+  // Show join overlay if match is starting/ready (for both creator and players)
+  // Don't show if user cancelled it or game is already running
+  if (!isGameRunning && !joinOverlayCancelled && (lobby.status === 'starting' || lobby.status === 'ready' || lobby.status === 'in-progress')) {
+    console.log('🎮 Match ready - showing join overlay...');
+    showJoinMatchOverlay(lobby);
+  } else {
+    hideJoinMatchOverlay();
   }
 }
 
@@ -519,6 +599,16 @@ function updateStatusMessage(lobby) {
 async function switchTeam(newTeam) {
   if (!currentLobbyId || !currentNetID) return;
   
+  // Check cooldown
+  const now = Date.now();
+  const timeSinceLastSwitch = now - lastTeamSwitchTime;
+  
+  if (timeSinceLastSwitch < TEAM_SWITCH_COOLDOWN) {
+    const remainingSeconds = Math.ceil((TEAM_SWITCH_COOLDOWN - timeSinceLastSwitch) / 1000);
+    showWarning(`⏳ Bitte warte noch ${remainingSeconds} Sekunde${remainingSeconds !== 1 ? 'n' : ''}`);
+    return;
+  }
+  
   try {
     const response = await fetchNoCache(`${MASTER_SERVER_URL}/lobbies/${currentLobbyId}/switch-team`, {
       method: 'POST',
@@ -533,6 +623,11 @@ async function switchTeam(newTeam) {
     
     if (data.success) {
       console.log(`✅ Switched to ${newTeam} team`);
+      lastTeamSwitchTime = now; // Update last switch time
+      
+      // Play team switch sound
+      playSound(sounds.playerSwitch);
+      
       const teamIcon = newTeam === 'red' ? '🔴' : '🔵';
       showInfo(`${teamIcon} Team gewechselt!`);
       refreshLobby(); // Immediate refresh
@@ -586,6 +681,7 @@ async function startMatch() {
   // Button deaktivieren und Status anzeigen
   startBtn.disabled = true;
   startBtn.textContent = t('view.status.starting');
+  startBtn.classList.add('loading-dots');
   isGameRunning = true; // Spiel-Prozess beginnt
   
   try {
@@ -607,18 +703,25 @@ async function startMatch() {
     
     if (data.success) {
       console.log('✅ Server started!', data);
-      showSuccess('Server wird gestartet! 🚀');
+      showSuccess('Server gestartet! 🚀');
       
-      // Server ist ready! Button-Status aktualisieren
-      startBtn.textContent = t('view.status.server-ready');
+      // Bring window to front for all players
+      ipcRenderer.send('focus-window');
       
-      // Countdown bevor Client startet
-      await startClientCountdown(data);
+      // Don't auto-start the game - show join overlay for creator too
+      startBtn.disabled = false;
+      startBtn.textContent = t('view.start');
+      startBtn.classList.remove('loading-dots');
+      isGameRunning = false;
+      
+      // Show join overlay for creator as well
+      showJoinMatchOverlay(data);
       
     } else {
       showError(data.error || 'Failed to start server');
       startBtn.disabled = false;
       startBtn.textContent = t('view.start');
+      startBtn.classList.remove('loading-dots');
       isGameRunning = false; // Fehler beim Start
     }
     
@@ -627,21 +730,9 @@ async function startMatch() {
     showError('Failed to start server');
     startBtn.disabled = false;
     startBtn.textContent = t('view.start');
+    startBtn.classList.remove('loading-dots');
     isGameRunning = false; // Fehler beim Start
   }
-}
-
-async function startClientCountdown(serverData) {
-  const startBtn = document.getElementById('startBtn');
-  
-  // Update button status
-  startBtn.textContent = t('view.status.connecting');
-  
-  // Small delay to allow server to fully initialize
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  // Start client
-  connectToServer(serverData);
 }
 
 async function connectToServer(data) {
@@ -665,7 +756,7 @@ async function connectToServer(data) {
       ip: data.server.ip,
       port: data.server.port,
       lobbyId: currentLobbyId
-    });
+    }, config.getWindowedMode());
     
     // Wait for game to launch
     ipcRenderer.once('game-launched', (event, launchData) => {
@@ -680,6 +771,12 @@ async function connectToServer(data) {
     ipcRenderer.once('game-closed', (event, closeData) => {
       console.log('🎮 Game closed', closeData);
       
+      // Hide join overlay in case it's showing
+      hideJoinMatchOverlay();
+      
+      // Reset join overlay cancelled flag when game ends
+      joinOverlayCancelled = false;
+      
       // Re-enable button after game ends
       const startBtn = document.getElementById('startBtn');
       startBtn.disabled = false;
@@ -692,7 +789,82 @@ async function connectToServer(data) {
   }
 }
 
+// ========================================
+// JOIN MATCH OVERLAY
+// ========================================
+
+function setupJoinMatchOverlay() {
+  const joinBtn = document.getElementById('joinMatchBtn');
+  const cancelBtn = document.getElementById('cancelJoinBtn');
+  
+  if (joinBtn) {
+    joinBtn.addEventListener('click', () => {
+      console.log('🎮 Join button clicked - connecting to match...');
+      const overlay = document.getElementById('joinMatchOverlay');
+      const lobbyData = overlay.dataset.lobby ? JSON.parse(overlay.dataset.lobby) : null;
+      
+      if (lobbyData) {
+        hideJoinMatchOverlay();
+        joinMatch(lobbyData);
+      }
+    });
+  }
+  
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', () => {
+      console.log('❌ Join cancelled by user');
+      joinOverlayCancelled = true; // Mark as cancelled
+      hideJoinMatchOverlay();
+    });
+  }
+}
+
+function showJoinMatchOverlay(lobby) {
+  const overlay = document.getElementById('joinMatchOverlay');
+  const title = document.getElementById('joinMatchTitle');
+  const text = document.getElementById('joinMatchText');
+  
+  if (!overlay) return;
+  
+  // Store lobby data in overlay for later use
+  overlay.dataset.lobby = JSON.stringify(lobby);
+  
+  // Update text based on status using i18n
+  if (lobby.status === 'in-progress') {
+    title.textContent = t('join.overlay.title.running');
+    text.textContent = t('join.overlay.text.already-running');
+  } else if (lobby.status === 'ready' || lobby.status === 'starting') {
+    title.textContent = t('join.overlay.title.ready');
+    text.textContent = t('join.overlay.text.host-started');
+  }
+  
+  overlay.style.display = 'flex';
+}
+
+function hideJoinMatchOverlay() {
+  const overlay = document.getElementById('joinMatchOverlay');
+  if (overlay) {
+    overlay.style.display = 'none';
+    overlay.dataset.lobby = '';
+  }
+}
+
+function joinMatch(lobby) {
+  if (!lobby.server) {
+    console.warn('⚠️ Match started but no server data available yet');
+    showError('Server-Daten noch nicht verfügbar. Bitte warte einen Moment.');
+    return;
+  }
+  
+  console.log('🎮 Joining match:', lobby.server);
+  isGameRunning = true;
+  
+  // Connect to the game server
+  connectToServer({ server: lobby.server });
+}
+
 // Auto-join match when host starts (for non-creator players)
+// DEPRECATED: Now using manual join overlay instead
 async function autoJoinMatch(lobby) {
   if (!lobby.server) {
     console.warn('⚠️ Match started but no server data available yet');
@@ -709,6 +881,9 @@ async function autoJoinMatch(lobby) {
 async function leaveLobby() {
   if (!currentLobbyId || !currentNetID) return;
   
+  // Reset join overlay flag when leaving
+  joinOverlayCancelled = false;
+  
   try {
     const response = await fetchNoCache(`${MASTER_SERVER_URL}/lobbies/${currentLobbyId}/leave`, {
       method: 'POST',
@@ -720,19 +895,31 @@ async function leaveLobby() {
     
     const data = await response.json();
     
-    if (data.success) {
-      console.log('✅ Left lobby');
+    if (data.success || !data.success) {
+      // Always go back to lobby browser, even if leave failed (lobby might be deleted)
+      console.log('✅ Left lobby (or lobby no longer exists)');
       stopRefreshing();
       
-      // Go back to lobby browser
+      // Switch chat back to global mode
+      if (typeof switchChatMode !== 'undefined') {
+        switchChatMode('global');
+      }
+      
       ipcRenderer.send('open-lobby-browser');
-    } else {
-      showError(data.error || 'Failed to leave lobby');
     }
     
   } catch (error) {
     console.error('Error leaving lobby:', error);
-    showError('Failed to leave lobby');
+    // Even on error, go back to lobby browser (lobby might be deleted)
+    console.log('⚠️ Error leaving lobby, returning to browser anyway');
+    stopRefreshing();
+    
+    // Switch chat back to global mode
+    if (typeof switchChatMode !== 'undefined') {
+      switchChatMode('global');
+    }
+    
+    ipcRenderer.send('open-lobby-browser');
   }
 }
 
@@ -756,11 +943,11 @@ function showError(message) {
 
 function loadEditMaps() {
   // Request base path from main process
-  ipcRenderer.send('get-base-path-for-edit');
+  ipcRenderer.send('get-base-path');
 }
 
-// Receive base path and load maps
-ipcRenderer.on('base-path-for-edit-response', (event, basePath) => {
+// Receive base path and load maps (use same handler as lobby-creator)
+ipcRenderer.on('base-path-response', (event, basePath) => {
   console.log('📁 Base path for edit maps:', basePath);
   
   const mapsDir = path.join(basePath, "UDKGame", "CookedPC", "Deathball", "Maps");
@@ -792,6 +979,7 @@ ipcRenderer.on('base-path-for-edit-response', (event, basePath) => {
     mapCard.classList.add('map-card');
     mapCard.dataset.mapName = mapName;
     
+    // Add image
     let imgPath = path.join(imagesDir, mapName + ".jpg");
     let imgElement = document.createElement('img');
     if (fs.existsSync(imgPath)) {
@@ -805,11 +993,13 @@ ipcRenderer.on('base-path-for-edit-response', (event, basePath) => {
     }
     mapCard.appendChild(imgElement);
     
+    // Add label (show without DB- prefix)
     let label = document.createElement('div');
     label.classList.add('map-name');
     label.textContent = mapName.replace('DB-', '');
     mapCard.appendChild(label);
     
+    // Click handler
     mapCard.addEventListener('click', () => {
       document.querySelectorAll('#editMapsContainer .map-card').forEach(card => {
         card.classList.remove('selected');

@@ -5,7 +5,8 @@ class ConfigManager {
   constructor() {
     this.defaults = {
       masterServerUrl: 'http://supraball.servers.lan:8991',
-      language: 'de'
+      language: 'de',
+      windowedMode: false
     };
     
     this.settings = this.load();
@@ -74,6 +75,14 @@ class ConfigManager {
 
   setLanguage(lang) {
     this.set('language', lang);
+  }
+
+  getWindowedMode() {
+    return this.get('windowedMode');
+  }
+
+  setWindowedMode(enabled) {
+    this.set('windowedMode', enabled);
   }
 }
 

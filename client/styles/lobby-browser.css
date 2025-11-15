@@ -7,6 +7,13 @@ body {
   overflow-x: hidden;
   min-height: 100vh;
   position: relative;
+  display: grid;
+  grid-template-columns: 4fr 1fr;
+  grid-template-rows: auto 1fr;
+  gap: 20px;
+  padding: 20px;
+  padding-top: 80px;
+  box-sizing: border-box;
 }
 
 /* Animated background particles */
@@ -87,6 +94,7 @@ body::before {
 }
 
 .header {
+  grid-column: 1 / -1;
   background: rgba(10, 25, 41, 0.8);
   backdrop-filter: blur(30px) saturate(180%);
   -webkit-backdrop-filter: blur(30px) saturate(180%);
@@ -100,8 +108,11 @@ body::before {
   border-bottom: 1px solid rgba(38, 208, 206, 0.3);
   flex-wrap: nowrap;
   gap: 12px;
-  position: relative;
-  z-index: 10;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
 }
 
 .header::before {
@@ -254,10 +265,25 @@ body::before {
   font-size: clamp(14px, 2vw, 16px);
 }
 
+#notification-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10000;
+  pointer-events: none;
+}
+
 .container {
-  max-width: min(1600px, 98vw);
-  margin: clamp(15px, 2vw, 25px) auto;
-  padding: 0 clamp(10px, 2vw, 20px);
+  grid-column: 1;
+  grid-row: 2;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+#chatContainer {
+  grid-column: 2;
+  grid-row: 2;
 }
 
 .lobby-table {

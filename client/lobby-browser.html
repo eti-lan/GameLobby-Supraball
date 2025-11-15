@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="styles/scrollbar.css">
   <link rel="stylesheet" href="styles/notifications.css">
   <link rel="stylesheet" href="styles/settings-popup.css">
+  <link rel="stylesheet" href="styles/chat.css">
   <link rel="stylesheet" href="styles/lobby-browser.css">
   <script src="i18n.js"></script>
   <script src="scripts/config.js"></script>
@@ -75,39 +76,55 @@
   <div class="settings-overlay" id="settingsOverlay">
     <div class="settings-popup">
       <div class="settings-header">
-        <div class="settings-title">⚙️ Einstellungen</div>
+        <div class="settings-title" data-i18n="settings.title">⚙️ Einstellungen</div>
         <button class="settings-close" id="settingsCloseBtn">×</button>
       </div>
       
       <form class="settings-form" id="settingsForm">
         <div class="setting-group">
-          <label class="setting-label">
+          <label class="setting-label" data-i18n="settings.masterserver.label">
             🌐 Master-Server URL
           </label>
           <input 
             type="text" 
             class="setting-input" 
             id="masterServerInput" 
+            data-placeholder-i18n="settings.masterserver.placeholder"
             placeholder="http://supraball.servers.lan:8991"
             value=""
           />
-          <div class="setting-hint">
+          <div class="setting-hint" data-i18n="settings.masterserver.hint">
             Standard: http://supraball.servers.lan:8991
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <label class="setting-label" style="display: flex; align-items: center; cursor: pointer;">
+            <input 
+              type="checkbox" 
+              id="windowedModeCheckbox" 
+              style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer;"
+            />
+            <span data-i18n="settings.windowed.label">🖥️ Spiel im Fenstermodus starten</span>
+          </label>
+          <div class="setting-hint" data-i18n="settings.windowed.hint">
+            Startet das Spiel im Fenster statt im Vollbildmodus
           </div>
         </div>
 
         <div class="settings-actions">
           <button type="button" class="settings-btn settings-btn-reset" id="resetBtn">
-            <span>🔄 Zurücksetzen</span>
+            <span data-i18n="settings.reset">🔄 Zurücksetzen</span>
           </button>
           <button type="submit" class="settings-btn settings-btn-primary">
-            <span>💾 Speichern</span>
+            <span data-i18n="settings.save">💾 Speichern</span>
           </button>
         </div>
       </form>
     </div>
   </div>
   
+  <script src="UDKNetIDGenerator.js"></script>
   <script src="scripts/lobby-main.js"></script>
   <script>
     // Language selector functionality
@@ -131,14 +148,17 @@
     const settingsForm = document.getElementById('settingsForm');
     const resetBtn = document.getElementById('resetBtn');
     const masterServerInput = document.getElementById('masterServerInput');
+    const windowedModeCheckbox = document.getElementById('windowedModeCheckbox');
 
     // Load current settings
     masterServerInput.value = config.getMasterServerUrl();
+    windowedModeCheckbox.checked = config.getWindowedMode();
 
     // Open settings
     settingsBtn.addEventListener('click', () => {
       settingsOverlay.classList.add('active');
       masterServerInput.value = config.getMasterServerUrl();
+      windowedModeCheckbox.checked = config.getWindowedMode();
     });
 
     // Close settings
@@ -159,14 +179,15 @@
       const newUrl = masterServerInput.value.trim();
       
       if (!newUrl) {
-        showError('Bitte gib eine Master-Server URL ein');
+        showError(t('settings.masterserver.required'));
         return;
       }
 
       config.setMasterServerUrl(newUrl);
+      config.setWindowedMode(windowedModeCheckbox.checked);
       window.MASTER_SERVER_URL = newUrl;
       
-      showSuccess('Einstellungen gespeichert! Seite wird neu geladen...');
+      showSuccess(t('settings.save.success'));
       
       setTimeout(() => {
         location.reload();
@@ -175,10 +196,11 @@
 
     // Reset to defaults
     resetBtn.addEventListener('click', () => {
-      if (confirm('Möchtest du wirklich alle Einstellungen zurücksetzen?')) {
+      if (confirm(t('settings.reset.confirm'))) {
         config.reset();
         masterServerInput.value = config.getMasterServerUrl();
-        showInfo('Einstellungen zurückgesetzt');
+        windowedModeCheckbox.checked = config.getWindowedMode();
+        showInfo(t('settings.reset.success'));
       }
     });
 
@@ -189,5 +211,35 @@
       }
     });
   </script>
+
+  <!-- Chat Container -->
+  <div class="chat-container" id="chatContainer">
+    <div class="chat-header">
+      <div class="chat-title">
+        <span id="chatMode">💬 Chat</span>
+      </div>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+      <div class="chat-empty">
+        <div class="chat-empty-icon">💬</div>
+        <div class="chat-empty-text">Noch keine Nachrichten</div>
+      </div>
+    </div>
+    <div class="chat-input-container">
+      <textarea 
+        class="chat-input" 
+        id="chatInput" 
+        data-placeholder-i18n="chat.placeholder"
+        placeholder="Nachricht eingeben..."
+        rows="1"
+        maxlength="500"
+      ></textarea>
+      <button class="chat-send-btn" id="chatSendBtn" title="Senden (Enter)">
+        ➤
+      </button>
+    </div>
+  </div>
+
+  <script src="scripts/chat.js"></script>
 </body>
 </html>

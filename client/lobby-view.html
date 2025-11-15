@@ -7,6 +7,7 @@
   <title>Supraball - Lobby</title>
   <link rel="stylesheet" href="styles/scrollbar.css">
   <link rel="stylesheet" href="styles/notifications.css">
+  <link rel="stylesheet" href="styles/chat.css">
   <link rel="stylesheet" href="styles/lobby-view.css">
   <script src="i18n.js"></script>
   <script src="scripts/config.js"></script>
@@ -14,11 +15,24 @@
 </head>
 <body>
 <div id="notification-container"></div>
-<div class="header">
-    <h1 id="lobbyNameHeader" data-i18n="view.title">Lobby</h1>
-  </div>
 
-  <div class="container">
+<!-- Join Match Overlay -->
+<div id="joinMatchOverlay" class="join-match-overlay" style="display: none;">
+  <div class="join-match-content">
+    <div class="join-match-icon">🎮</div>
+    <h2 id="joinMatchTitle" class="join-match-title" data-i18n="join.overlay.title.ready">Match bereit!</h2>
+    <p id="joinMatchText" class="join-match-text" data-i18n="join.overlay.text.host-started">Der Host hat das Match gestartet.</p>
+    <button id="joinMatchBtn" class="join-match-btn">
+      <span class="join-match-btn-icon">▶</span>
+      <span class="join-match-btn-text" data-i18n="join.overlay.button">Spiel beitreten</span>
+    </button>
+    <button id="cancelJoinBtn" class="cancel-join-btn" data-i18n="join.overlay.cancel">Abbrechen</button>
+  </div>
+</div>
+
+  <div class="header">
+    <h1 id="lobbyNameHeader" data-i18n="view.title">🏆 Lobby</h1>
+  </div>  <div class="container">
     <div id="errorMessage"></div>
 
     <div id="statusMessage" class="status-message" style="display: none;"></div>
@@ -186,6 +200,36 @@
     </div>
   </div>
 
+  <!-- Chat Container -->
+  <div class="chat-container" id="chatContainer">
+    <div class="chat-header">
+      <div class="chat-title">
+        <span id="chatMode">💬 Chat</span>
+      </div>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+      <div class="chat-empty">
+        <div class="chat-empty-icon">💬</div>
+        <div class="chat-empty-text">Noch keine Nachrichten</div>
+      </div>
+    </div>
+    <div class="chat-input-container">
+      <textarea 
+        class="chat-input" 
+        id="chatInput" 
+        data-placeholder-i18n="chat.placeholder"
+        placeholder="Nachricht eingeben..."
+        rows="1"
+        maxlength="500"
+      ></textarea>
+      <button class="chat-send-btn" id="chatSendBtn" title="Senden (Enter)">
+        ➤
+      </button>
+    </div>
+  </div>
+
+  <script src="UDKNetIDGenerator.js"></script>
+  <script src="scripts/chat.js"></script>
   <script src="scripts/lobby-view.js"></script>
 </body>
 </html>

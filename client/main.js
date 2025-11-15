@@ -356,7 +356,7 @@ function createWindow() {
   const { session } = require('electron');
   
   mainWindow = new BrowserWindow({
-    width: 1100,
+    width: 1500,
     height: 900,
     autoHideMenuBar: true,
     webPreferences: {
@@ -756,7 +756,7 @@ function generateClientNetID() {
   return UDKNetIDGenerator.generateNetID();
 }
 
-ipcMain.on('connect-server', async (event, serverIP) => {
+ipcMain.on('connect-server', async (event, serverIP, windowedMode = false) => {
   console.log('?? CONNECTION REQUEST: Ensuring fresh registration before UDK.exe start...');
   
   try {
@@ -767,6 +767,9 @@ ipcMain.on('connect-server', async (event, serverIP) => {
     // Small delay to ensure registration is processed
     setTimeout(() => {
       const args = [`${serverIP}:7777?ReadUp=1?ConfirmConnect=0?bTravel=0`];
+      if (windowedMode) {
+        args.push('-windowed');
+      }
       const executablePath = getUDKPath();
       const workingDir = path.dirname(path.dirname(path.dirname(executablePath)));
       const clientProcess = spawn(executablePath, args, { cwd: workingDir });
@@ -781,6 +784,9 @@ ipcMain.on('connect-server', async (event, serverIP) => {
     
     // Continue anyway since continuous registration should have us covered
     const args = [`${serverIP}:7777?ReadUp=1?ConfirmConnect=0?bTravel=0`];
+    if (windowedMode) {
+      args.push('-windowed');
+    }
     const executablePath = getUDKPath();
     const workingDir = path.dirname(path.dirname(path.dirname(executablePath)));
     const clientProcess = spawn(executablePath, args, { cwd: workingDir });
@@ -791,7 +797,7 @@ ipcMain.on('connect-server', async (event, serverIP) => {
 });
 
 // Connect to lobby match server
-ipcMain.on('connect-lobby-match', async (event, connectionInfo) => {
+ipcMain.on('connect-lobby-match', async (event, connectionInfo, windowedMode = false) => {
   console.log(`🎮 LOBBY MATCH: Connecting to ${connectionInfo.ip}:${connectionInfo.port}...`);
   
   try {
@@ -807,6 +813,9 @@ ipcMain.on('connect-lobby-match', async (event, connectionInfo) => {
     setTimeout(() => {
       const serverAddress = `${connectionInfo.ip}:${connectionInfo.port}`;
       const args = [`${serverAddress}?ReadUp=1?ConfirmConnect=0?bTravel=0`];
+      if (windowedMode) {
+        args.push('-windowed');
+      }
       const executablePath = getUDKPath();
       const workingDir = path.dirname(path.dirname(path.dirname(executablePath)));
       
@@ -840,6 +849,9 @@ ipcMain.on('connect-lobby-match', async (event, connectionInfo) => {
     // Continue anyway since continuous registration should have us covered
     const serverAddress = `${connectionInfo.ip}:${connectionInfo.port}`;
     const args = [`${serverAddress}?ReadUp=1?ConfirmConnect=0?bTravel=0`];
+    if (windowedMode) {
+      args.push('-windowed');
+    }
     const executablePath = getUDKPath();
     const workingDir = path.dirname(path.dirname(path.dirname(executablePath)));
     
@@ -852,8 +864,11 @@ ipcMain.on('connect-lobby-match', async (event, connectionInfo) => {
   }
 });
 
-ipcMain.on('start-training', (event, trainingMap) => {
+ipcMain.on('start-training', (event, trainingMap, windowedMode = false) => {
   const args = [`${trainingMap}?Training=1`];
+  if (windowedMode) {
+    args.push('-windowed');
+  }
   const executablePath = getUDKPath();
   const workingDir = path.dirname(path.dirname(path.dirname(executablePath)));
   const clientProcess = spawn(executablePath, args, { cwd: workingDir });
@@ -862,9 +877,12 @@ ipcMain.on('start-training', (event, trainingMap) => {
   clientProcess.on('close', (code) => console.log(`Training process exited with code ${code}`));
 });
 
-ipcMain.on('start-offline-training', (event) => {
+ipcMain.on('start-offline-training', (event, windowedMode = false) => {
   console.log('🎯 Starting Offline Training (db-smallpitch)...');
   const args = [`db-smallpitch?Training=1`];
+  if (windowedMode) {
+    args.push('-windowed');
+  }
   const executablePath = getUDKPath();
   const workingDir = path.dirname(path.dirname(path.dirname(executablePath)));
   const clientProcess = spawn(executablePath, args, { cwd: workingDir });
@@ -971,13 +989,6 @@ ipcMain.on('get-base-path', (event) => {
   console.log(`📁 IPC: Base path sent: ${basePath}`);
 });
 
-// IPC handler for getting base path synchronously (for edit mode)
-ipcMain.handle('get-base-path-for-edit', async () => {
-  const basePath = getBasePath();
-  console.log(`📁 IPC handle: Base path: ${basePath}`);
-  return basePath;
-});
-
 // Set current lobby ID (when joining/creating lobby)
 ipcMain.on('set-lobby-id', (event, lobbyId) => {
   currentLobbyId = lobbyId;
@@ -1023,5 +1034,18 @@ ipcMain.on('open-quick-match', () => {
   
   if (mainWindow) {
     mainWindow.loadFile(path.join(resourcesPath, 'quick-match.html'));
+  }
+});
+
+// Focus/bring window to front
+ipcMain.on('focus-window', () => {
+  if (mainWindow) {
+    if (mainWindow.isMinimized()) {
+      mainWindow.restore();
+    }
+    mainWindow.show();
+    mainWindow.focus();
+    mainWindow.setAlwaysOnTop(true);
+    mainWindow.setAlwaysOnTop(false);
   }
 });
