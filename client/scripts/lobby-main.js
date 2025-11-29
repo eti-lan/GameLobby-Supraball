@@ -112,6 +112,12 @@ function setupEventListeners() {
     });
   }
   
+  // Tutorial Button
+  document.getElementById('tutorialBtn').addEventListener('click', () => {
+    console.log('📚 Starting Tutorial...');
+    ipcRenderer.send('start-tutorial', config.getWindowedMode());
+  });
+  
   // Offline Training Button
   document.getElementById('offlineTrainingBtn').addEventListener('click', () => {
     console.log('🎯 Starting Offline Training...');

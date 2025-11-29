@@ -10,8 +10,8 @@ body {
   color: #fff;
   margin: 0;
   padding: 0;
-  overflow-x: hidden;
-  min-height: 100vh;
+  overflow: hidden;
+  height: 100vh;
   display: grid;
   grid-template-columns: 4fr 1fr;
   grid-template-rows: auto 1fr;
@@ -142,11 +142,17 @@ body::before {
   padding: 0;
   position: relative;
   z-index: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
 }
 
 #chatContainer {
   grid-column: 2;
   grid-row: 2;
+  min-height: 0;
+  max-height: 100%;
+  overflow: hidden;
 }
 
 .lobby-info {

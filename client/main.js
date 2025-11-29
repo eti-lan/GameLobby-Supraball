@@ -877,6 +877,20 @@ ipcMain.on('start-training', (event, trainingMap, windowedMode = false) => {
   clientProcess.on('close', (code) => console.log(`Training process exited with code ${code}`));
 });
 
+ipcMain.on('start-tutorial', (event, windowedMode = false) => {
+  console.log('📚 Starting Tutorial (DB-Tutorial)...');
+  const args = [`DB-Tutorial`];
+  if (windowedMode) {
+    args.push('-windowed');
+  }
+  const executablePath = getUDKPath();
+  const workingDir = path.dirname(path.dirname(path.dirname(executablePath)));
+  const clientProcess = spawn(executablePath, args, { cwd: workingDir });
+  clientProcess.stdout.on('data', (data) => console.log(`stdout: ${data}`));
+  clientProcess.stderr.on('data', (data) => console.error(`stderr: ${data}`));
+  clientProcess.on('close', (code) => console.log(`Tutorial process exited with code ${code}`));
+});
+
 ipcMain.on('start-offline-training', (event, windowedMode = false) => {
   console.log('🎯 Starting Offline Training (db-smallpitch)...');
   const args = [`db-smallpitch?Training=1`];
