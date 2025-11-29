@@ -879,7 +879,7 @@ ipcMain.on('start-training', (event, trainingMap, windowedMode = false) => {
 
 ipcMain.on('start-tutorial', (event, windowedMode = false) => {
   console.log('📚 Starting Tutorial (DB-Tutorial)...');
-  const args = [`DB-Tutorial`];
+  const args = [`DB-Tutorial?Game=DBGame.DBTutorialGame`];
   if (windowedMode) {
     args.push('-windowed');
   }
